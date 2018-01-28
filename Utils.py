@@ -42,9 +42,10 @@ def getPerf(startDate=['2017-01-03'], type='all'):
     based on getMarketValue()
     '''
     data = getMarketValue(type).head(100)
+    data.set_index('code', inplace=True)
     for date in startDate:
         priceDict = {}
-        for code in data.code:
+        for code in data.index:
             # 暂时不考虑停牌
             # 传入日期必须为交易日
             # 前复权数据
@@ -52,11 +53,13 @@ def getPerf(startDate=['2017-01-03'], type='all'):
                 p = ts.get_k_data(code, start=date, end=date)['close'][0]
             except Exception as e:
                 print e
-            finally:
+            else:
                 priceDict[code] = p
-        perf = pd.concat([data.set_index('code'), pd.Series(priceDict, name=date)], axis=1)
-        perf['chg' + date] = perf['trade']/perf[date] - 1
-    return perf
+        data = pd.concat([data, pd.Series(priceDict, name=date)], axis=1)
+        data['chg' + date] = data['trade']/data[date] - 1
+    return data
+
+
 
 
 
